@@ -3,6 +3,7 @@ import {
   getAuth,
   GithubAuthProvider,
   GoogleAuthProvider,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
@@ -21,8 +22,11 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  console.log(error);
+  const [isRegister, setIsRegister] = useState(false);
   const auth = getAuth();
+
+  // google auth
+
   const handleGoogleSignIn = () => {
     signInWithPopup(auth, googleProvider)
       .then((result) => {
@@ -33,10 +37,12 @@ function App() {
           email,
         });
       })
-      .then((err) => {
-        console.log(err);
+      .catch((err) => {
+        setError(err.message);
       });
   };
+
+  // gitHub auth
 
   const handleGitHubSignIn = () => {
     signInWithPopup(auth, gitHubProvider)
@@ -49,18 +55,11 @@ function App() {
         });
       })
       .catch((err) => {
-        console.log(err);
+        setError(err.message);
       });
   };
 
-  // sign out function
-
-  const handelSignOut = () => {
-    signOut(auth);
-    setLoggedInUser({});
-  };
-
-  // email pass register
+  // email pass auth
 
   const handelEmail = (e) => {
     setEmail(e.target.value);
@@ -70,8 +69,18 @@ function App() {
     setPassword(e.target.value);
   };
 
+  const handelRegistrationChange = (e) => {
+    setIsRegister(e.target.checked);
+  };
+
   const handelRegister = (e) => {
     e.preventDefault();
+    isRegister ? loginUser(email, password) : createNewUser(email, password);
+  };
+
+  // create new user
+
+  const createNewUser = (email, password) => {
     if (password.length <= 8) {
       setError('Password should be at least 8 characters');
     } else if (!/(?=.*?[A-Z])/.test(password)) {
@@ -93,13 +102,35 @@ function App() {
     }
   };
 
+  // login
+
+  const loginUser = (email, password) => {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((result) => {
+        const user = result.user;
+        console.log(user);
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
+  };
+
+  // sign out function
+
+  const handelSignOut = () => {
+    signOut(auth);
+    setLoggedInUser({});
+  };
+
   return (
     <Container>
       <Form
         className='my-5 border p-5 rounded shadow'
         onSubmit={handelRegister}
       >
-        <h1 className='mb-5 text-success fw-bold'>Please Registration</h1>
+        <h1 className='mb-5 text-success fw-bold'>
+          Please {isRegister ? 'Login ' : 'Registration'}
+        </h1>
         <Form.Group className='mb-3' controlId='formBasicEmail'>
           <Form.Label>Email address</Form.Label>
           <Form.Control
@@ -123,11 +154,15 @@ function App() {
           />
         </Form.Group>
         <Form.Group className='mb-3' controlId='formBasicCheckbox'>
-          <Form.Check type='checkbox' label='Check me out' />
+          <Form.Check
+            type='checkbox'
+            label='Already Registered ?'
+            onChange={handelRegistrationChange}
+          />
         </Form.Group>
         <h5 className='text-danger mb-3'>{error}</h5>
         <Button variant='primary' type='submit'>
-          Register
+          {isRegister ? 'Login ' : 'Registration'}
         </Button>
       </Form>
       {!loggedInUser.name ? (

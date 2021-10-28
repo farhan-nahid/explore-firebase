@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  FacebookAuthProvider,
   getAuth,
   GithubAuthProvider,
   GoogleAuthProvider,
@@ -17,6 +18,7 @@ import initializeAuthentication from './Firebase/firebase.initialize';
 
 const googleProvider = new GoogleAuthProvider();
 const gitHubProvider = new GithubAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
 initializeAuthentication();
 
 function App() {
@@ -51,6 +53,24 @@ function App() {
 
   const handleGitHubSignIn = () => {
     signInWithPopup(auth, gitHubProvider)
+      .then((result) => {
+        const { displayName, photoURL, email } = result.user;
+        setLoggedInUser({
+          name: displayName,
+          img: photoURL,
+          email,
+        });
+        setError('');
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
+  };
+
+  // facebook auth
+
+  const handleFacebookSignIn = () => {
+    signInWithPopup(auth, facebookProvider)
       .then((result) => {
         const { displayName, photoURL, email } = result.user;
         setLoggedInUser({
@@ -235,7 +255,10 @@ function App() {
             <Button onClick={handleGoogleSignIn} className='me-5'>
               Google Sign In
             </Button>
-            <Button onClick={handleGitHubSignIn}>GitHub Sign In</Button>
+            <Button onClick={handleGitHubSignIn} className='me-5'>
+              GitHub Sign In
+            </Button>
+            <Button onClick={handleFacebookSignIn}>Facebook Sign In</Button>
           </div>
         </>
       ) : (
